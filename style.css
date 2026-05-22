@@ -1,0 +1,27 @@
+#container  { display: flex; justify-content: center; }
+
+#timeline {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 12px;
+padding: 12px 20px;
+font-family: sans-serif;
+margin-top: 16px;
+}
+
+.year-end { font-size: 1em; font-weight: bold; min-width: 36px; text-align: center; }
+
+#slider-wrapper { position: relative; width: 600px; flex-shrink: 0; }
+
+#year-slider { width: 100%; cursor: pointer; accent-color: black; display: block; }
+
+#year-tooltip {
+position: absolute;
+top: 100%;
+margin-top: 4px;
+font-size: 0.95em;
+font-weight: bold;
+transform: translateX(-50%);
+pointer-events: none;
+}
