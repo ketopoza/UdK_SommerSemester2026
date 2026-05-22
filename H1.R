@@ -137,3 +137,7 @@ plot_oceania
 
 # --- Save ---
 ggsave("europe.png")
+ggsave("asia.png")
+ggsave("america.png")
+ggsave("africa.png")
+ggsave("oceania.png")
