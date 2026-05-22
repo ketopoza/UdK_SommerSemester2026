@@ -1,78 +1,57 @@
 <!DOCTYPE html>
+
 <div id="container"></div>
+
 <div id="timeline">
-  <span id="year-label">1900</span>
-  <input type="range" id="year-slider" min="1900" max="2025" value="1900" step="1">
+  <span class="year-end">1900</span>
+  <div id="slider-wrapper">
+    <input type="range" id="year-slider" min="1900" max="2025" value="1900" step="1">
+    <div id="year-tooltip">1900</div>
+  </div>
+  <span class="year-end">2025</span>
 </div>
 
 <style>
+  #container  { display: flex; justify-content: center; }
+
   #timeline {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 12px;
     padding: 12px 20px;
     font-family: sans-serif;
   }
-  #year-label {
-    font-size: 1.2em;
+
+  .year-end { font-size: 1em; font-weight: bold; min-width: 36px; text-align: center; }
+
+  #slider-wrapper { position: relative; width: 600px; flex-shrink: 0; }
+
+  #year-slider { width: 100%; cursor: pointer; accent-color: black; display: block; }
+
+  #year-tooltip {
+    position: absolute;
+    top: 100%;
+    margin-top: 4px;
+    font-size: 0.95em;
     font-weight: bold;
-    min-width: 40px;
-  }
-  #year-slider {
-    width: 600px;
+    transform: translateX(-50%);
+    pointer-events: none;
   }
 </style>
 
 <script type="module">
 
-// ── Imports ───────────────────────────────────────────────────────────────────
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import { feature, mesh } from "https://cdn.jsdelivr.net/npm/topojson-client@3/+esm";
 
-// ── Legend helper ─────────────────────────────────────────────────────────────
-function Legend(color, {
-  title, tickSize = 6, width = 320,
-  height = 44 + tickSize, marginTop = 18,
-  marginRight = 0, marginBottom = 16 + tickSize,
-  marginLeft = 0, ticks = width / 64,
-  tickFormat, tickValues
-} = {}) {
-  const svg = d3.create("svg")
-      .attr("width", width).attr("height", height)
-      .attr("viewBox", [0, 0, width, height])
-      .style("overflow", "visible").style("display", "block");
 
-  svg.append("image")
-      .attr("x", marginLeft).attr("y", marginTop)
-      .attr("width", width - marginLeft - marginRight)
-      .attr("height", height - marginTop - marginBottom)
-      .attr("preserveAspectRatio", "none")
-      .attr("href", ramp(color.interpolator
-        ? color.interpolator()
-        : d3.scaleSequential([0, 1], d3.interpolateRgbBasis(color.range()))).toDataURL());
-
-  const xScale = d3.scaleLinear()
-      .domain(color.domain())
-      .range([marginLeft, width - marginRight]);
-
-  svg.append("g")
-      .attr("transform", `translate(0,${height - marginBottom})`)
-      .call(d3.axisBottom(xScale).tickSize(tickSize).tickValues(tickValues))
-      .call(g => g.selectAll(".tick line").attr("y1", marginTop + marginBottom - height))
-      .call(g => g.select(".domain").remove())
-      .call(g => g.selectAll(".tick text")
-          .text(d => typeof tickFormat === "function" ? tickFormat(d) : d))
-      .call(g => g.append("text")
-          .attr("x", marginLeft).attr("y", marginTop + marginBottom - height - 6)
-          .attr("fill", "currentColor").attr("text-anchor", "start")
-          .attr("font-weight", "bold").text(title));
-
-  return svg.node();
-}
+// ── Legend ────────────────────────────────────────────────────────────────────
 
 function ramp(color, n = 256) {
   const canvas = document.createElement("canvas");
-  canvas.width = n; canvas.height = 1;
+  canvas.width = n;
+  canvas.height = 1;
   const ctx = canvas.getContext("2d");
   for (let i = 0; i < n; i++) {
     ctx.fillStyle = color(i / (n - 1));
@@ -81,7 +60,47 @@ function ramp(color, n = 256) {
   return canvas;
 }
 
+function Legend(color, { title, tickSize = 6, width = 320, tickFormat, tickValues } = {}) {
+  const marginTop = 18, marginRight = 0, marginLeft = 0;
+  const marginBottom = 16 + tickSize;
+  const height = 44 + tickSize;
+
+  const svg = d3.create("svg")
+    .attr("width", width).attr("height", height)
+    .attr("viewBox", [0, 0, width, height])
+    .style("overflow", "visible").style("display", "block");
+
+  // Gradient image
+  svg.append("image")
+    .attr("x", marginLeft).attr("y", marginTop)
+    .attr("width", width - marginLeft - marginRight)
+    .attr("height", height - marginTop - marginBottom)
+    .attr("preserveAspectRatio", "none")
+    .attr("href", ramp(color.interpolator
+      ? color.interpolator()
+      : d3.scaleSequential([0, 1], d3.interpolateRgbBasis(color.range()))).toDataURL());
+
+  // Axis
+  const xScale = d3.scaleLinear().domain(color.domain()).range([marginLeft, width - marginRight]);
+
+  svg.append("g")
+    .attr("transform", `translate(0,${height - marginBottom})`)
+    .call(d3.axisBottom(xScale).tickSize(tickSize).tickValues(tickValues))
+    .call(g => g.selectAll(".tick line").attr("y1", marginTop + marginBottom - height))
+    .call(g => g.select(".domain").remove())
+    .call(g => g.selectAll(".tick text")
+      .text(d => typeof tickFormat === "function" ? tickFormat(d) : d))
+    .call(g => g.append("text")
+      .attr("x", width / 2).attr("y", marginTop + marginBottom - height - 6)
+      .attr("fill", "currentColor").attr("text-anchor", "middle")
+      .attr("font-weight", "bold").text(title));
+
+  return svg.node();
+}
+
+
 // ── Country name aliases ──────────────────────────────────────────────────────
+
 const rename = new Map([
   ["Antigua and Barbuda", "Antigua and Barb."],
   ["Bolivia (Plurinational State of)", "Bolivia"],
@@ -114,105 +133,89 @@ const rename = new Map([
 ]);
 
 
-// ── Load and transform data ───────────────────────────────────────────────────
-// CSV is expected to have columns: country, year, value
-// e.g. "United States, 1900, 0.75"
+// ── Data ──────────────────────────────────────────────────────────────────────
+
 const raw = (await d3.csv("hale.csv")).map(d => ({
-  name: rename.get(d.country) || d.country,
-  year: +d.year,
+  name:  rename.get(d.country) || d.country,
+  year:  +d.year,
   value: +d.value
 }));
 
-// Index data as: yearMap[year] -> Map(countryName -> value)
-// Makes it fast to look up all countries for a given year
-const yearMap = d3.group(raw, d => d.year);
+// Index by year → Map(country → value) for fast lookups
 const dataByYear = new Map();
-for (const [year, rows] of yearMap) {
+for (const [year, rows] of d3.group(raw, d => d.year)) {
   dataByYear.set(year, new Map(rows.map(d => [d.name, d.value])));
 }
 
 
-// ── Load world topology ───────────────────────────────────────────────────────
-const world = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
-const countries = feature(world, world.objects.countries);
+// ── World topology ────────────────────────────────────────────────────────────
+
+const world       = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
+const countries   = feature(world, world.objects.countries);
 const countrymesh = mesh(world, world.objects.countries, (a, b) => a !== b);
 
 
-// ── Chart dimensions ──────────────────────────────────────────────────────────
-const width = 928;
+// ── Map setup ─────────────────────────────────────────────────────────────────
+
+const width     = 928;
 const marginTop = 46;
-const height = width / 2 + marginTop;
+const height    = width / 2 + marginTop;
 
-
-// ── Map projection & path generator ──────────────────────────────────────────
-const projection = d3.geoEqualEarth().fitExtent([[2, marginTop + 2], [width - 2, height]], {type: "Sphere"});
+const projection = d3.geoEqualEarth()
+  .fitExtent([[2, marginTop + 2], [width - 2, height]], {type: "Sphere"});
 const path = d3.geoPath(projection);
 
-
-// ── Color scale ───────────────────────────────────────────────────────────────
 // 0 = autocracy (black), 1 = democracy (white)
 const color = d3.scaleSequential([0, 1], d3.interpolateRgb("black", "white"));
 
 
-// ── SVG container ─────────────────────────────────────────────────────────────
+// ── SVG ───────────────────────────────────────────────────────────────────────
+
 const svg = d3.create("svg")
-    .attr("width", width).attr("height", height)
-    .attr("viewBox", [0, 0, width, height])
-    .attr("style", "max-width: 100%; height: auto;");
+  .attr("width", width).attr("height", height)
+  .attr("viewBox", [0, 0, width, height])
+  .attr("style", "max-width: 100%; height: auto;");
 
-
-// ── Legend ────────────────────────────────────────────────────────────────────
+// Legend — centered in the SVG
 svg.append("g")
-    .attr("transform", "translate(20,0)")
-    .append(() => Legend(color, {
-      title: "Democracy index",
-      width: 260,
-      tickValues: [0, 0.25, 0.5, 0.75, 1],
-      tickFormat: d => d === 0 ? "Autocracy" : d === 1 ? "Democracy" : d,
-    }));
+  .attr("transform", `translate(${(width - 260) / 2},0)`)
+  .append(() => Legend(color, {
+    title: "Democracy index",
+    width: 260,
+    tickValues: [0, 0.25, 0.5, 0.75, 1],
+    tickFormat: d => d === 0 ? "Autocracy" : d === 1 ? "Democracy" : d,
+  }));
 
-
-// ── Globe outline ─────────────────────────────────────────────────────────────
+// Globe background
 svg.append("path")
-    .datum({type: "Sphere"})
-    .attr("fill", "white")
-    .attr("stroke", "currentColor")
-    .attr("d", path);
+  .datum({type: "Sphere"})
+  .attr("fill", "white").attr("stroke", "currentColor").attr("d", path);
 
-
-// ── Country fills ─────────────────────────────────────────────────────────────
-// Stored in a variable so we can update fills when the year changes
+// Country fills — kept in variable so update() can recolor them
 const countryPaths = svg.append("g")
-    .selectAll("path")
-    .data(countries.features)
-    .join("path")
-    .attr("d", path);
+  .selectAll("path")
+  .data(countries.features)
+  .join("path")
+  .attr("d", path);
 
-
-// ── Country borders ───────────────────────────────────────────────────────────
+// Country borders
 svg.append("path")
-    .datum(countrymesh)
-    .attr("fill", "none")
-    .attr("stroke", "white")
-    .attr("d", path);
+  .datum(countrymesh)
+  .attr("fill", "none").attr("stroke", "white").attr("d", path);
 
-
-// ── Mount to DOM ──────────────────────────────────────────────────────────────
 document.getElementById("container").appendChild(svg.node());
 
 
-// ── Update function ───────────────────────────────────────────────────────────
-// Called whenever the slider moves — re-colors countries for the selected year
+// ── Update ────────────────────────────────────────────────────────────────────
+
 function update(year) {
   const valuemap = dataByYear.get(year) ?? new Map();
-
   countryPaths
     .attr("fill", d => {
       const val = valuemap.get(d.properties.name);
       return val != null ? color(val) : "#ccc";
     })
-    .select("title").remove(); // clear old tooltips
-
+    .select("title").remove();
   countryPaths.append("title")
     .text(d => {
       const val = valuemap.get(d.properties.name);
@@ -221,17 +224,25 @@ function update(year) {
 }
 
 
-// ── Slider wiring ─────────────────────────────────────────────────────────────
-const slider = document.getElementById("year-slider");
-const label  = document.getElementById("year-label");
+// ── Slider ────────────────────────────────────────────────────────────────────
+
+const slider  = document.getElementById("year-slider");
+const tooltip = document.getElementById("year-tooltip");
+
+function updateTooltipPosition() {
+  const pct = (+slider.value - +slider.min) / (+slider.max - +slider.min);
+  const offset = pct * (slider.offsetWidth - 16) + 8;
+  tooltip.style.left = `${offset}px`;
+  tooltip.textContent = slider.value;
+}
 
 slider.addEventListener("input", () => {
-  const year = +slider.value;
-  label.textContent = year;
-  update(year);
+  update(+slider.value);
+  updateTooltipPosition();
 });
 
-// Draw the initial year on load
 update(1900);
+updateTooltipPosition();
+window.addEventListener("resize", updateTooltipPosition);
 
 </script>
