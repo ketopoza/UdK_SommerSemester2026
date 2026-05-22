@@ -64,20 +64,39 @@ const lineGen = d3.line()
   .x(d => xScale(d.year))
   .y(d => yScale(d.value));
 
-// ── Draw lines ────────────────────────────────────────────────────────────────
+// ── Draw lines (grey by default) ──────────────────────────────────────────────
 const paths = svg.append("g")
   .attr("fill",            "none")
-  .attr("stroke",          "black")
+  .attr("stroke",          "#ddd")
   .attr("stroke-width",    1.2)
   .attr("stroke-linejoin", "round")
   .attr("stroke-linecap",  "round")
   .selectAll("path")
   .data(grouped)
   .join("path")
-    .style("mix-blend-mode", "multiply")
     .attr("d", ([, values]) =>
       lineGen(values.sort((a, b) => a.year - b.year))
     );
+
+// ── Average line ──────────────────────────────────────────────────────────────
+const years = Array.from(new Set(data.map(d => d.year))).sort((a, b) => a - b);
+
+const averageData = years.map(year => {
+  const values = data.filter(d => d.year === year && d.value != null).map(d => d.value);
+  return { year, value: values.length ? d3.mean(values) : null };
+});
+
+const averageLine = d3.line()
+  .defined(d => d.value != null)
+  .x(d => xScale(d.year))
+  .y(d => yScale(d.value));
+
+const averagePath = svg.append("path")
+  .datum(averageData)
+  .attr("fill",         "none")
+  .attr("stroke",       "black")
+  .attr("stroke-width", 2)
+  .attr("d",            averageLine);
 
 // ── Tooltip dot + label ───────────────────────────────────────────────────────
 const dot = svg.append("g").attr("display", "none");
@@ -103,7 +122,7 @@ const pixelPoints = data
 // ── Pointer interaction ───────────────────────────────────────────────────────
 svg
   .on("pointerenter", () => {
-    paths.style("mix-blend-mode", null).style("stroke", "#ddd");
+    averagePath.attr("display", "none");
     dot.attr("display", null);
   })
   .on("pointermove", event => {
@@ -124,12 +143,12 @@ svg
   })
   .on("pointerleave", () => {
     paths
-      .style("mix-blend-mode", "multiply")
-      .style("stroke",          "black")
-      .style("stroke-width",    1.2);
+      .style("stroke",       "#ddd")
+      .style("stroke-width", 1.2);
+    averagePath.attr("display", null).raise();
     dot.attr("display", "none");
   })
   .on("touchstart", e => e.preventDefault());
 
-// ── Append to #container ──────────────────────────────────────────────────────
+// ── Append to #timeline-container ────────────────────────────────────────────
 document.getElementById("timeline-container").appendChild(svg.node());

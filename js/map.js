@@ -140,15 +140,15 @@ const defs = svg.append("defs");
 
 const pattern = defs.append("pattern")
   .attr("id",                "stripes")
-  .attr("width",             3)          // ← was 1
-  .attr("height",            3)          // ← was 1
+  .attr("width",             2)          // ← was 1
+  .attr("height",            2)          // ← was 1
   .attr("patternUnits",      "userSpaceOnUse")
   .attr("patternTransform",  "rotate(45)");
 
 // White background — needs explicit width and height
 pattern.append("rect")
-  .attr("width",  3)                     // ← was missing
-  .attr("height", 3)                     // ← was missing
+  .attr("width",  2)                     // ← was missing
+  .attr("height", 2)                     // ← was missing
   .attr("fill",   "#ffffff");
 
 // Black stripe — needs x position at 0
@@ -172,7 +172,7 @@ svg.append("g")
 // Globe background
 svg.append("path")
   .datum({type: "Sphere"})
-  .attr("fill", "white").attr("stroke", "currentColor").attr("d", path);
+  .attr("fill", "#1b81ffff").attr("stroke", "currentColor").attr("d", path);
 
 // Country fills — kept in variable so update() can recolor them
 const countryPaths = svg.append("g")
@@ -184,7 +184,7 @@ const countryPaths = svg.append("g")
 // Country borders
 svg.append("path")
   .datum(countrymesh)
-  .attr("fill", "none").attr("stroke", "white").attr("d", path);
+  .attr("fill", "none").attr("stroke", "#1b81ffff").attr("d", path);
 
 document.getElementById("map-container").appendChild(svg.node());
 
