@@ -67,7 +67,7 @@ const lineGen = d3.line()
 // ── Draw lines ────────────────────────────────────────────────────────────────
 const paths = svg.append("g")
   .attr("fill",            "none")
-  .attr("stroke",          "steelblue")
+  .attr("stroke",          "black")
   .attr("stroke-width",    1.2)
   .attr("stroke-linejoin", "round")
   .attr("stroke-linecap",  "round")
@@ -81,13 +81,13 @@ const paths = svg.append("g")
 
 // ── Tooltip dot + label ───────────────────────────────────────────────────────
 const dot = svg.append("g").attr("display", "none");
-dot.append("circle").attr("r", 3).attr("fill", "steelblue");
+dot.append("circle").attr("r", 3).attr("fill", "black");
 dot.append("text")
   .attr("text-anchor", "middle")
   .attr("y", -10)
   .attr("font-size", "12px")
   .attr("font-weight", "bold")
-  .attr("fill", "#333");
+  .attr("fill", "black");
 
 // ── Pre-compute pixel positions for nearest-point lookup ──────────────────────
 const pixelPoints = data
@@ -114,7 +114,7 @@ svg
     }, { dist: Infinity });
 
     paths
-      .style("stroke",       ([k]) => k === closest.name ? "steelblue" : "#ddd")
+      .style("stroke",       ([k]) => k === closest.name ? "black" : "#ddd")
       .style("stroke-width", ([k]) => k === closest.name ? 2.5 : 1)
       .filter(([k]) => k === closest.name)
       .raise();
@@ -125,7 +125,7 @@ svg
   .on("pointerleave", () => {
     paths
       .style("mix-blend-mode", "multiply")
-      .style("stroke",          "steelblue")
+      .style("stroke",          "black")
       .style("stroke-width",    1.2);
     dot.attr("display", "none");
   })

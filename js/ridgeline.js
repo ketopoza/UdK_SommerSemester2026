@@ -89,7 +89,7 @@ for (const country of countries) {
   // filled area
   g.append("path")
     .datum(values)
-    .attr("fill", "steelblue")
+    .attr("fill", "black")
     .attr("fill-opacity", 0.15)
     .attr("d", area);
 
@@ -97,7 +97,7 @@ for (const country of countries) {
   g.append("path")
     .datum(values)
     .attr("fill",         "none")
-    .attr("stroke",       "steelblue")
+    .attr("stroke",       "black")
     .attr("stroke-width", 1.2)
     .attr("d", line);
 
