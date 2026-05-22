@@ -56,45 +56,48 @@ function Legend(color, { title, tickSize = 6, width = 320, tickFormat, tickValue
 
 
 // ── Country name aliases ──────────────────────────────────────────────────────
-
+// Maps your CSV country_name values → TopoJSON names
 const rename = new Map([
-  ["Antigua and Barbuda", "Antigua and Barb."],
-  ["Bolivia (Plurinational State of)", "Bolivia"],
-  ["Bosnia and Herzegovina", "Bosnia and Herz."],
-  ["Brunei Darussalam", "Brunei"],
-  ["Central African Republic", "Central African Rep."],
-  ["Cook Islands", "Cook Is."],
-  ["Democratic People's Republic of Korea", "North Korea"],
+  ["Bosnia and Herzegovina",           "Bosnia and Herz."],
+  ["Central African Republic",         "Central African Rep."],
   ["Democratic Republic of the Congo", "Dem. Rep. Congo"],
-  ["Dominican Republic", "Dominican Rep."],
-  ["Equatorial Guinea", "Eq. Guinea"],
-  ["Iran (Islamic Republic of)", "Iran"],
-  ["Lao People's Democratic Republic", "Laos"],
-  ["Marshall Islands", "Marshall Is."],
-  ["Micronesia (Federated States of)", "Micronesia"],
-  ["Republic of Korea", "South Korea"],
-  ["Republic of Moldova", "Moldova"],
-  ["Russian Federation", "Russia"],
-  ["Saint Kitts and Nevis", "St. Kitts and Nevis"],
-  ["Saint Vincent and the Grenadines", "St. Vin. and Gren."],
-  ["Sao Tome and Principe", "São Tomé and Principe"],
-  ["Solomon Islands", "Solomon Is."],
-  ["South Sudan", "S. Sudan"],
-  ["Swaziland", "eSwatini"],
-  ["Syrian Arab Republic", "Syria"],
-  ["The former Yugoslav Republic of Macedonia", "Macedonia"],
-  ["United Republic of Tanzania", "Tanzania"],
-  ["Venezuela (Bolivarian Republic of)", "Venezuela"],
-  ["Viet Nam", "Vietnam"]
+  ["Dominican Republic",               "Dominican Rep."],
+  ["Equatorial Guinea",                "Eq. Guinea"],
+  ["Eswatini",                         "eSwatini"],
+  ["Ivory Coast",                      "Côte d'Ivoire"],
+  ["Laos",                             "Laos"],
+  ["North Korea",                      "North Korea"],
+  ["North Macedonia",                  "Macedonia"],
+  ["Republic of the Congo",            "Congo"],
+  ["Sao Tome and Principe",            "São Tomé and Principe"],
+  ["Solomon Islands",                  "Solomon Is."],
+  ["South Korea",                      "South Korea"],
+  ["South Sudan",                      "S. Sudan"],
+  ["United States of America",         "United States of America"],
+  ["Tanzania",                         "Tanzania"],
+  ["Russia",                           "Russia"],
+  ["Venezuela",                        "Venezuela"],
+  ["Vietnam",                          "Vietnam"],
+  ["Czechia",                    "Czechia"],
+  ["Türkiye",                    "Turkey"],
+  ["Burma/Myanmar",                "Myanmar"],
+  ["Republic of Vietnam",            "Vietnam"],
+  ["Greenland",                    "Denmark"],
+  ["The Gambia",                    "Gambia"],
+  ["Puerto Rico",                    "United States of America"],
+  ["W. Sahara",                    "Western Sahara"],
+  
+
+
 ]);
 
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
-const raw = (await d3.csv("hale.csv")).map(d => ({
-  name:  rename.get(d.country) || d.country,
+const raw = (await d3.csv("data/all_continents.csv")).map(d => ({
+  name:  rename.get(d.country_name) || d.country_name,  // ← column is country_name
   year:  +d.year,
-  value: +d.value
+  value: +d.v2x_polyarchy                               // ← column is v2x_polyarchy
 }));
 
 // Index by year → Map(country → value) for fast lookups
@@ -131,6 +134,30 @@ const svg = d3.create("svg")
   .attr("width", width).attr("height", height)
   .attr("viewBox", [0, 0, width, height])
   .attr("style", "max-width: 100%; height: auto;");
+
+// ── No-data pattern (black diagonal stripes over white) ───────────────────────
+const defs = svg.append("defs");
+
+const pattern = defs.append("pattern")
+  .attr("id",                "stripes")
+  .attr("width",             3)          // ← was 1
+  .attr("height",            3)          // ← was 1
+  .attr("patternUnits",      "userSpaceOnUse")
+  .attr("patternTransform",  "rotate(45)");
+
+// White background — needs explicit width and height
+pattern.append("rect")
+  .attr("width",  3)                     // ← was missing
+  .attr("height", 3)                     // ← was missing
+  .attr("fill",   "#ffffff");
+
+// Black stripe — needs x position at 0
+pattern.append("rect")
+  .attr("x",      0)                     // ← was missing
+  .attr("y",      0)                     // ← was missing
+  .attr("width",  1)                     // stripe thickness
+  .attr("height", 6)
+  .attr("fill",   "black");
 
 // Legend — centered in the SVG
 svg.append("g")
@@ -169,7 +196,7 @@ function update(year) {
   countryPaths
     .attr("fill", d => {
       const val = valuemap.get(d.properties.name);
-      return val != null ? color(val) : "#ccc";
+      return val != null ? color(val) : "url(#stripes)";
     })
     .select("title").remove();
   countryPaths.append("title")

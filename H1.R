@@ -3,7 +3,7 @@ library(tidyverse)
 # ── Country lists by continent ─────────────────────────────────────────────────
 european_countries <- c(
   "Albania", "Andorra", "Austria", "Belarus", "Belgium", "Bosnia and Herzegovina",
-  "Bulgaria", "Croatia", "Cyprus", "Czech Republic", "Denmark", "Estonia",
+  "Bulgaria", "Croatia", "Cyprus", "Czechia", "Denmark", "Estonia",
   "Finland", "France", "Germany", "Greece", "Hungary", "Iceland", "Ireland",
   "Italy", "Kosovo", "Latvia", "Liechtenstein", "Lithuania", "Luxembourg",
   "Malta", "Moldova", "Monaco", "Montenegro", "Netherlands", "North Macedonia",
@@ -63,7 +63,7 @@ continent_map <- bind_rows(
 )
 
 # ── Load, filter and fill gaps ─────────────────────────────────────────────────
-ert <- read_csv("inst/ert.csv")
+ert <- read_csv("data/ert.csv")
 
 all_continents <- ert %>%
   inner_join(continent_map, by = "country_name") %>%
