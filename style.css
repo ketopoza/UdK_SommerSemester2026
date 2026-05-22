@@ -18,7 +18,13 @@
     box-sizing: border-box;
 }
 
-.year-end { font-size: 1em; font-weight: bold; min-width: 36px; text-align: center; }
+#timeline-container { 
+    width: 100%; 
+    margin-top: 40px;}
+
+.year-end { font-size: 10px; font: comic-sans-mss; font-weight: bold; min-width: 36px; text-align: center; }
+
+#title { font-size: 1.5em; font-weight: bold; margin-top: 20px; }
 
 #slider-wrapper { position: relative; flex: 1; }
 
