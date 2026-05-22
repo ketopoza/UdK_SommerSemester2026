@@ -1,23 +1,24 @@
 <!DOCTYPE html>
-
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Democracy and Autocracy Visualization</title>
   <link rel="stylesheet" href="style.css">
-  <script type="module" src="js/map.js"> </script>
-  <script type="module" src="js/timeline.js"> </script>
+  <script type="module" src="js/map.js"></script>
+  <script type="module" src="js/timeline.js"></script>
 </head>
 
 <body>
-<div id="container"></div>
-<div id="timeline">
-  <span class="year-end">1900</span>
-  <div id="slider-wrapper">
-    <input type="range" id="year-slider" min="1900" max="2025" value="1900" step="1">
-    <div id="year-tooltip">1900</div>
+  <div id="container">
   </div>
-  <span class="year-end">2025</span>
-</div>
-</body>
 
+  <div id="timeline">
+    <span class="year-end">1900</span>
+    <div id="slider-wrapper">
+      <input type="range" id="year-slider" min="1900" max="2025" value="1900" step="1">
+      <div id="year-tooltip">1900</div>
+    </div>
+    <span class="year-end">2025</span>
+  </div>
+</body>
 </html>

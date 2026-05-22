@@ -10,7 +10,7 @@ const marginBottom = 30;
 const marginLeft   = 50;
 
 // ── Load & parse CSV ──────────────────────────────────────────────────────────
-const raw = await d3.csv("data/your-data.csv", d => ({
+const raw = await d3.csv("data/all_continents.csv", d => ({
   continent: d.continent,
   name:      d.country_name,
   year:      +d.year,
