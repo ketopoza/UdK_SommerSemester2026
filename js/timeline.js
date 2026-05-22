@@ -1,55 +1,58 @@
+// timeline.js
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
-import { feature, mesh } from "https://cdn.jsdelivr.net/npm/topojson-client@3/+esm";
 
-// ── Line chart: all countries over time ───────────────────────────────────────
+// ── Dimensions ────────────────────────────────────────────────────────────────
+const width        = 928;
+const height       = 500;
+const marginTop    = 20;
+const marginRight  = 30;
+const marginBottom = 30;
+const marginLeft   = 50;
 
-const width2      = 928;
-const height2     = 600;
-const marginTop2  = 20;
-const marginRight2  = 20;
-const marginBottom2 = 30;
-const marginLeft2   = 40;
+// ── Load & parse CSV ──────────────────────────────────────────────────────────
+const raw = await d3.csv("data/your-data.csv", d => ({
+  continent: d.continent,
+  name:      d.country_name,
+  year:      +d.year,
+  value:     d.v2x_polyarchy === "NA" || d.v2x_polyarchy === "" ? null : +d.v2x_polyarchy,
+}));
 
-// ── Parse data into flat array [{name, year, value}, ...] ─────────────────────
-const points_flat = [];
-for (const [year, countryMap] of dataByYear) {
-  for (const [name, value] of countryMap) {
-    points_flat.push({ name, year, value });
-  }
-}
+const data = raw.filter(d => d.name && !isNaN(d.year));
+
+// ── Group by country ──────────────────────────────────────────────────────────
+const grouped = d3.group(data, d => d.name);
 
 // ── Scales ────────────────────────────────────────────────────────────────────
 const xScale = d3.scaleLinear()
-  .domain(d3.extent(points_flat, d => d.year))
-  .range([marginLeft2, width2 - marginRight2]);
+  .domain(d3.extent(data, d => d.year))
+  .range([marginLeft, width - marginRight]);
 
 const yScale = d3.scaleLinear()
   .domain([0, 1]).nice()
-  .range([height2 - marginBottom2, marginTop2]);
+  .range([height - marginBottom, marginTop]);
 
 // ── SVG ───────────────────────────────────────────────────────────────────────
-const svg2 = d3.create("svg")
-  .attr("width",   width2)
-  .attr("height",  height2)
-  .attr("viewBox", [0, 0, width2, height2])
-  .attr("style",   "max-width: 100%; height: auto; overflow: visible; font: 10px sans-serif;");
+const svg = d3.create("svg")
+  .attr("width",   width)
+  .attr("height",  height)
+  .attr("viewBox", [0, 0, width, height])
+  .attr("style",   "max-width:100%; height:auto; overflow:visible; font:10px sans-serif;");
 
-// ── Axes ──────────────────────────────────────────────────────────────────────
-// X axis
-svg2.append("g")
-  .attr("transform", `translate(0,${height2 - marginBottom2})`)
+// ── X axis ────────────────────────────────────────────────────────────────────
+svg.append("g")
+  .attr("transform", `translate(0,${height - marginBottom})`)
   .call(d3.axisBottom(xScale).tickFormat(d3.format("d")).ticks(10).tickSizeOuter(0));
 
-// Y axis
-svg2.append("g")
-  .attr("transform", `translate(${marginLeft2},0)`)
+// ── Y axis ────────────────────────────────────────────────────────────────────
+svg.append("g")
+  .attr("transform", `translate(${marginLeft},0)`)
   .call(d3.axisLeft(yScale))
   .call(g => g.select(".domain").remove())
   .call(g => g.selectAll(".tick line").clone()
-    .attr("x2", width2 - marginLeft2 - marginRight2)
+    .attr("x2", width - marginLeft - marginRight)
     .attr("stroke-opacity", 0.1))
   .call(g => g.append("text")
-    .attr("x", -marginLeft2)
+    .attr("x", -marginLeft)
     .attr("y", 10)
     .attr("fill", "currentColor")
     .attr("text-anchor", "start")
@@ -57,31 +60,28 @@ svg2.append("g")
 
 // ── Line generator ────────────────────────────────────────────────────────────
 const lineGen = d3.line()
-  .defined(d => d.value != null)          // breaks line on missing data (gaps)
+  .defined(d => d.value != null)
   .x(d => xScale(d.year))
   .y(d => yScale(d.value));
 
-// ── Group by country ──────────────────────────────────────────────────────────
-const grouped = d3.group(points_flat, d => d.name);
-
-// ── Draw one path per country ─────────────────────────────────────────────────
-const paths = svg2.append("g")
-  .attr("fill",             "none")
-  .attr("stroke",           "steelblue")
-  .attr("stroke-width",     1.2)
-  .attr("stroke-linejoin",  "round")
-  .attr("stroke-linecap",   "round")
+// ── Draw lines ────────────────────────────────────────────────────────────────
+const paths = svg.append("g")
+  .attr("fill",            "none")
+  .attr("stroke",          "steelblue")
+  .attr("stroke-width",    1.2)
+  .attr("stroke-linejoin", "round")
+  .attr("stroke-linecap",  "round")
   .selectAll("path")
   .data(grouped)
   .join("path")
     .style("mix-blend-mode", "multiply")
-    .attr("d", ([, values]) => lineGen(values.sort((a, b) => a.year - b.year)));
+    .attr("d", ([, values]) =>
+      lineGen(values.sort((a, b) => a.year - b.year))
+    );
 
-// ── Interactive dot + label ───────────────────────────────────────────────────
-const dot = svg2.append("g").attr("display", "none");
-
+// ── Tooltip dot + label ───────────────────────────────────────────────────────
+const dot = svg.append("g").attr("display", "none");
 dot.append("circle").attr("r", 3).attr("fill", "steelblue");
-
 dot.append("text")
   .attr("text-anchor", "middle")
   .attr("y", -10)
@@ -89,39 +89,47 @@ dot.append("text")
   .attr("font-weight", "bold")
   .attr("fill", "#333");
 
-// ── Flat pixel-space points for nearest-point lookup ─────────────────────────
-const pixelPoints = points_flat.map(d => [xScale(d.year), yScale(d.value), d.name]);
+// ── Pre-compute pixel positions for nearest-point lookup ──────────────────────
+const pixelPoints = data
+  .filter(d => d.value != null)
+  .map(d => ({
+    px:    xScale(d.year),
+    py:    yScale(d.value),
+    name:  d.name,
+    year:  d.year,
+    value: d.value,
+  }));
 
-// ── Pointer events ────────────────────────────────────────────────────────────
-svg2
+// ── Pointer interaction ───────────────────────────────────────────────────────
+svg
   .on("pointerenter", () => {
     paths.style("mix-blend-mode", null).style("stroke", "#ddd");
     dot.attr("display", null);
   })
-  .on("pointermove", (event) => {
+  .on("pointermove", event => {
     const [xm, ym] = d3.pointer(event);
-    const i = d3.leastIndex(pixelPoints, ([px, py]) => Math.hypot(px - xm, py - ym));
-    const [px, py, name] = pixelPoints[i];
+    const closest = pixelPoints.reduce((best, p) => {
+      const dist = Math.hypot(p.px - xm, p.py - ym);
+      return dist < best.dist ? { ...p, dist } : best;
+    }, { dist: Infinity });
 
-    // Highlight the hovered country's line
     paths
-      .style("stroke", ([k]) => k === name ? "steelblue" : "#ddd")
-      .style("stroke-width", ([k]) => k === name ? 2.5 : 1)
-      .filter(([k]) => k === name)
+      .style("stroke",       ([k]) => k === closest.name ? "steelblue" : "#ddd")
+      .style("stroke-width", ([k]) => k === closest.name ? 2.5 : 1)
+      .filter(([k]) => k === closest.name)
       .raise();
 
-    // Move dot and label
-    dot.attr("transform", `translate(${px},${py})`);
-    dot.select("text").text(`${name} (${points_flat[i].year}): ${points_flat[i].value.toFixed(3)}`);
+    dot.attr("transform", `translate(${closest.px},${closest.py})`);
+    dot.select("text").text(`${closest.name} (${closest.year}): ${closest.value.toFixed(3)}`);
   })
   .on("pointerleave", () => {
     paths
       .style("mix-blend-mode", "multiply")
-      .style("stroke", "steelblue")
-      .style("stroke-width", 1.2);
+      .style("stroke",          "steelblue")
+      .style("stroke-width",    1.2);
     dot.attr("display", "none");
   })
-  .on("touchstart", event => event.preventDefault());
+  .on("touchstart", e => e.preventDefault());
 
-// ── Mount ─────────────────────────────────────────────────────────────────────
-document.getElementById("chart-container").appendChild(svg2.node());
+// ── Append to #container ──────────────────────────────────────────────────────
+document.getElementById("container").appendChild(svg.node());
