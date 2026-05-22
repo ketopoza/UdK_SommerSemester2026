@@ -132,4 +132,4 @@ svg
   .on("touchstart", e => e.preventDefault());
 
 // ── Append to #container ──────────────────────────────────────────────────────
-document.getElementById("container").appendChild(svg.node());
+document.getElementById("timeline-container").appendChild(svg.node());

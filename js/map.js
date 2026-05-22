@@ -186,7 +186,7 @@ svg.append("path")
   .datum(countrymesh)
   .attr("fill", "none").attr("stroke", "white").attr("d", path);
 
-document.getElementById("container").appendChild(svg.node());
+document.getElementById("map-container").appendChild(svg.node());
 
 
 // ── Update ────────────────────────────────────────────────────────────────────
