@@ -26,3 +26,10 @@ B- A window shows the graph and the individual development
 
 !- The graph can have a over that on the peaks of the waves shows the schocks of wikipedia. 
 ”-The change of countries over
+
+04.06 
+Filter the timeline on continents or regions. 
+
+Julias Kurs: Based on stock markets, animate the evolution of the v2x_polyarchy on a mirrored x axis where upwards the democratizing countries and downwards the autocratizing. on the back a values grid where the countires name appear and are pusshed either up or down. 
+The aesthetic would a inverted to avoid the good/bad connotations. 
+3d viewport of the world countries
