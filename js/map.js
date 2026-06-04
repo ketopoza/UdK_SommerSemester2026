@@ -78,26 +78,23 @@ const rename = new Map([
   ["Russia",                           "Russia"],
   ["Venezuela",                        "Venezuela"],
   ["Vietnam",                          "Vietnam"],
-  ["Czechia",                    "Czechia"],
-  ["Türkiye",                    "Turkey"],
-  ["Burma/Myanmar",                "Myanmar"],
-  ["Republic of Vietnam",            "Vietnam"],
-  ["Greenland",                    "Denmark"],
-  ["The Gambia",                    "Gambia"],
-  ["Puerto Rico",                    "United States of America"],
-  ["W. Sahara",                    "Western Sahara"],
-  
-
-
+  ["Czechia",                          "Czechia"],
+  ["Türkiye",                          "Turkey"],
+  ["Burma/Myanmar",                    "Myanmar"],
+  ["Republic of Vietnam",              "Vietnam"],
+  ["Greenland",                        "Denmark"],
+  ["The Gambia",                       "Gambia"],
+  ["Puerto Rico",                      "United States of America"],
+  ["W. Sahara",                        "Western Sahara"],
 ]);
 
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
 const raw = (await d3.csv("data/all_continents.csv")).map(d => ({
-  name:  rename.get(d.country_name) || d.country_name,  // ← column is country_name
+  name:  rename.get(d.country_name) || d.country_name,
   year:  +d.year,
-  value: +d.v2x_polyarchy                               // ← column is v2x_polyarchy
+  value: +d.v2x_polyarchy
 }));
 
 // Index by year → Map(country → value) for fast lookups
@@ -117,11 +114,12 @@ const countrymesh = mesh(world, world.objects.countries, (a, b) => a !== b);
 // ── Map setup ─────────────────────────────────────────────────────────────────
 
 const width     = 928;
-const marginTop = 70;
-const height    = width / 2 + marginTop;
+const marginTop = 10;        // reduced — legend is now at the bottom
+const legendH   = 50;        // space reserved for legend at bottom
+const height    = width / 2 + marginTop + legendH;
 
 const projection = d3.geoEqualEarth()
-  .fitExtent([[2, marginTop + 2], [width - 2, height]], {type: "Sphere"});
+  .fitExtent([[2, marginTop + 2], [width - 2, height - legendH]], {type: "Sphere"});
 const path = d3.geoPath(projection);
 
 // 0 = autocracy (black), 1 = democracy (white)
@@ -140,39 +138,29 @@ const defs = svg.append("defs");
 
 const pattern = defs.append("pattern")
   .attr("id",                "stripes")
-  .attr("width",             2)          // ← was 1
-  .attr("height",            2)          // ← was 1
+  .attr("width",             2)
+  .attr("height",            2)
   .attr("patternUnits",      "userSpaceOnUse")
   .attr("patternTransform",  "rotate(45)");
 
-// White background — needs explicit width and height
+// White background
 pattern.append("rect")
-  .attr("width",  2)                     // ← was missing
-  .attr("height", 2)                     // ← was missing
+  .attr("width",  2)
+  .attr("height", 2)
   .attr("fill",   "#ffffff");
 
-// Black stripe — needs x position at 0
+// Black stripe
 pattern.append("rect")
-  .attr("x",      0)                     // ← was missing
-  .attr("y",      0)                     // ← was missing
-  .attr("width",  1)                     // stripe thickness
+  .attr("x",      0)
+  .attr("y",      0)
+  .attr("width",  1)
   .attr("height", 6)
   .attr("fill",   "black");
-
-// Legend — centered in the SVG
-svg.append("g")
-  .attr("transform", `translate(${(width - 260) / 2},0)`)
-  .append(() => Legend(color, {
-    title: "Democracy index",
-    width: 260,
-    tickValues: [0, 0.25, 0.5, 0.75, 1],
-    tickFormat: d => d === 0 ? "Autocracy" : d === 1 ? "Democracy" : d,
-  }));
 
 // Globe background
 svg.append("path")
   .datum({type: "Sphere"})
-  .attr("fill", "#1b81ffff").attr("stroke", "currentColor").attr("d", path);
+  .attr("fill", "#ffffffff").attr("stroke", "currentColor").attr("d", path);
 
 // Country fills — kept in variable so update() can recolor them
 const countryPaths = svg.append("g")
@@ -184,7 +172,17 @@ const countryPaths = svg.append("g")
 // Country borders
 svg.append("path")
   .datum(countrymesh)
-  .attr("fill", "none").attr("stroke", "#1b81ffff").attr("d", path);
+  .attr("fill", "none").attr("stroke", "#ffffffff").attr("d", path).attr("stroke-width", 0.5);
+
+// Legend — below the map
+svg.append("g")
+  .attr("transform", `translate(${(width - 260) / 2}, ${height - legendH})`)
+  .append(() => Legend(color, {
+    title: "Democracy index",
+    width: 260,
+    tickValues: [0, 0.25, 0.5, 0.75, 1],
+    tickFormat: d => d === 0 ? "Autocracy" : d === 1 ? "Democracy" : d,
+  }));
 
 document.getElementById("map-container").appendChild(svg.node());
 
@@ -227,3 +225,5 @@ slider.addEventListener("input", () => {
 update(1900);
 updateTooltipPosition();
 window.addEventListener("resize", updateTooltipPosition);
+
+document.getElementById("map-svg-container").appendChild(svg.node());
